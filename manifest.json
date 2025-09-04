@@ -1,0 +1,35 @@
+{
+    "name": "Game Time App",
+    "short_name": "PEPGT",
+    "start_url": "./",
+    "theme_color": "#ffffff",
+    "background_color": "#fff",
+    "display": "standalone",
+    "description": "Advanced football match tracker with attendance, statistics, and enhanced event management",
+    "icons": [
+        {
+            "src": "./nugt512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "id": "NUGT",
+    "lang": "en",
+    "orientation": "portrait-primary",
+    "categories": [
+        "sports",
+        "utilities"
+    ],
+    "display_override": [
+        "window-controls-overlay",
+        "standalone"
+    ],
+    "launch_handler": {
+        "client_mode": [
+            "focus-existing",
+            "auto"
+        ]
+    },
+    "handle_links": "preferred"
+}

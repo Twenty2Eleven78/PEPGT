@@ -1,5 +1,5 @@
 //Cache Name
-const CACHE_NAME = "pepgt-cache-v126";
+const CACHE_NAME = "pepgt-cache-v127";
 //Files to cache - Modular Architecture
 const cacheFiles = [
   './',

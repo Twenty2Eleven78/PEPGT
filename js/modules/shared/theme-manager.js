@@ -5,7 +5,7 @@
 
 class ThemeManager {
   constructor() {
-    this.currentTheme = 'red';
+    this.currentTheme = 'blue';
     this.isDarkMode = false;
     this.themeSelect = null;
     this.themePreview = null;
@@ -13,13 +13,13 @@ class ThemeManager {
 
     this.themes = {
       red: {
-        name: 'Red (Default)',
+        name: 'Red',
         primary: '#dc3545',
         primaryLight: '#e74c3c',
         primaryDark: '#c82333'
       },
       blue: {
-        name: 'Blue',
+        name: 'Blue  (Default)',
         primary: '#007bff',
         primaryLight: '#0d6efd',
         primaryDark: '#0056b3'

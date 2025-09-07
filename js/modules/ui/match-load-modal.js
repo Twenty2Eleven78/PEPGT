@@ -84,15 +84,20 @@ class MatchLoadModal {
             <div class="d-flex justify-content-between align-items-start">
               <div class="flex-grow-1 me-3">
                 <div class="d-flex align-items-center mb-1">
+                  <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" 
+                       style="width: 28px; height: 28px;">
+                    <i class="fas fa-user text-primary" style="font-size: 0.7rem;"></i>
+                  </div>
                   <div class="min-width-0">
                     <div class="fw-bold text-truncate" style="font-size: 0.9rem;">${this._escapeHtml(match.title)}</div>
+                    <div class="text-muted text-truncate" style="font-size: 0.75rem;">Personal Match</div>
                   </div>
                 </div>
                 ${teamsDisplay ? `<div class="text-primary mb-1" style="font-size: 0.8rem;"><i class="fas fa-futbol me-1"></i>${this._escapeHtml(teamsDisplay)}${scoreDisplay}</div>` : ''}
                 <div class="text-muted" style="font-size: 0.75rem;">
                   <i class="fas fa-calendar me-1"></i>${formattedDate} ${formattedTime}
                 </div>
-                ${match.notes ? `<div class="text-muted mt-1" style="font-size: 0.75rem;"><i class="fas fa-sticky-note me-1"></i>${this._escapeHtml(match.notes.substring(0, 60))}${match.notes.length > 60 ? '...' : ''}</div>` : ''}
+                ${match.notes ? `<div class="text-muted mt-1" style="font-size: 0.75rem;"><i class="fas fa-sticky-note me-1"></i>${this._escapeHtml(match.notes.substring(0, 50))}${match.notes.length > 50 ? '...' : ''}</div>` : ''}
               </div>
               <div class="d-flex flex-column gap-1 flex-shrink-0" style="padding: 0.25rem;">
                 <!-- View and Raw Data on same line -->
@@ -114,6 +119,19 @@ class MatchLoadModal {
             </div>
           </div>
         `;
+
+        // Add hover effects
+        listItem.addEventListener('mouseenter', () => {
+          listItem.style.transform = 'translateY(-2px)';
+          listItem.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+          listItem.style.borderColor = '#c0c0c0';
+        });
+
+        listItem.addEventListener('mouseleave', () => {
+          listItem.style.transform = 'translateY(0)';
+          listItem.style.boxShadow = '';
+          listItem.style.borderColor = '#e0e0e0';
+        });
 
         // Add click handlers
         listItem.querySelector('.view-btn').addEventListener('click', (e) => {

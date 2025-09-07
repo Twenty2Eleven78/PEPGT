@@ -1,5 +1,5 @@
 //Cache Name
-const CACHE_NAME = "pepgt-cache-v128";
+const CACHE_NAME = "nugt-cache-v136";
 //Files to cache - Modular Architecture
 const cacheFiles = [
   './',
@@ -8,7 +8,6 @@ const cacheFiles = [
   './css/custom-framework.css',
   './css/style.css',
   './js/main.js',
-  './js/debug.js',
   // Core modules
   './js/modules/app.js',
   './js/modules/shared/constants.js',
@@ -23,7 +22,7 @@ const cacheFiles = [
   './js/modules/data/storage.js',
   './js/modules/data/default-roster.js',
   // Game modules
-  './js/modules/game/timer.js',
+  './js/modules/match/timer.js',
   // Match modules
   './js/modules/match/goals.js',
   './js/modules/match/combined-events.js',

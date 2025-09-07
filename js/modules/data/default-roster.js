@@ -9,15 +9,29 @@
 // Default roster configuration
 export const DEFAULT_ROSTER_CONFIG = {
     // Team information
-    teamName: 'Peterborough EP',
+    teamName: 'Netherton United',
     season: '2025-2026',
-    ageGroup: 'U12 Girls',
+    ageGroup: 'U13 Girls (U14)',
 
     // Default players list
     players: [
-        { name: 'Player1', shirtNumber: 1 },
-        { name: 'Player2', shirtNumber: 2 },
-        { name: 'Player3', shirtNumber: 3 }
+        { name: 'C.Alvarez', shirtNumber: null },
+        { name: 'A-R.Obidi', shirtNumber: null },
+        { name: 'A.Porada', shirtNumber: null },
+        { name: 'A.Seaman', shirtNumber: null },
+        { name: 'D.Peacock', shirtNumber: null },
+        { name: 'E.Doyle', shirtNumber: null },
+        { name: 'E.Van-Kerro', shirtNumber: null },
+        { name: 'E.Mutiti', shirtNumber: null },
+        { name: 'F.Asadi', shirtNumber: null },
+        { name: 'F.Bone', shirtNumber: null },
+        { name: 'F.Kendall', shirtNumber: 1 },
+        { name: 'H.Strowthers', shirtNumber: null },
+        { name: 'M.Finch', shirtNumber: null },
+        { name: 'M.Stevens', shirtNumber: null },
+        { name: 'S.Smith', shirtNumber: null },
+        { name: 'T.Rushmer', shirtNumber: null },
+        { name: 'V.Aig-Imoru', shirtNumber: null }
     ]
 };
 

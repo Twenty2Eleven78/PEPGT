@@ -1,7 +1,7 @@
 {
-  "name": "pegt",
+  "name": "nugt",
   "version": "3.7.1",
-  "description": "PEP GameTime App",
+  "description": "NUFC GameTime App",
   "type": "module",
   "engines": {
     "node": ">=18.0.0"

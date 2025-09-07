@@ -1,6 +1,6 @@
 /**
  * Combined Events Management
- * Merges events.js and enhanced-events.js functionality
+ * Merges events.js functionality
  * @version 4.0
  */
 
@@ -12,7 +12,7 @@ import { EVENT_TYPES } from '../shared/constants.js';
 import { notificationManager } from '../services/notifications.js';
 import { showModal, hideModal } from '../ui/modals.js';
 import { getEventIcon, getEventCardClass } from '../ui/components.js';
-import { timerController } from '../game/timer.js';
+import { timerController } from './timer.js';
 import { attendanceManager } from '../services/attendance.js';
 
 // Combined Events Manager Class
@@ -135,21 +135,34 @@ class CombinedEventsManager {
 
     const currentMinutes = Math.floor(event.rawTime / 60);
 
-    // Populate edit form based on type
-    if (type === 'matchEvent') {
+    // Update modal title and show/hide fields based on type
+    const modalTitle = document.getElementById('editEventModalLabel');
+    const editEventTypeContainer = document.getElementById('editEventTypeContainer');
+    const editEventNotesContainer = document.getElementById('editEventNotesContainer');
+    
+    if (type === 'goal') {
+      if (modalTitle) modalTitle.textContent = 'Edit Goal Time';
+      if (editEventTypeContainer) editEventTypeContainer.style.display = 'none';
+      if (editEventNotesContainer) editEventNotesContainer.style.display = 'none';
+    } else {
+      if (modalTitle) modalTitle.textContent = 'Edit Event';
+      if (editEventTypeContainer) editEventTypeContainer.style.display = 'block';
+      if (editEventNotesContainer) editEventNotesContainer.style.display = 'block';
+      
+      // Populate event-specific fields
       const editEventType = document.getElementById('editEventType');
       const editEventNotes = document.getElementById('editEventNotes');
-      const editEventIndex = document.getElementById('editEventIndex');
-
-      if (editEventType) editEventType.value = event.type;
+      
+      if (editEventType) editEventType.value = event.type || '';
       if (editEventNotes) editEventNotes.value = event.notes || '';
-      if (editEventIndex) editEventIndex.value = index;
     }
 
+    // Set common fields
+    const editEventIndex = document.getElementById('editEventIndex');
     const editTimeInput = document.getElementById('editEventTime');
-    if (editTimeInput) {
-      editTimeInput.value = currentMinutes;
-    }
+    
+    if (editEventIndex) editEventIndex.value = index;
+    if (editTimeInput) editTimeInput.value = currentMinutes;
 
     showModal('editEventModal');
   }
@@ -158,45 +171,68 @@ class CombinedEventsManager {
   handleEditEventFormSubmission(e) {
     e.preventDefault();
 
-    const newMinutes = parseInt(document.getElementById('editEventTime')?.value, 10);
-    if (isNaN(newMinutes)) return;
+    try {
+      const newMinutes = parseInt(document.getElementById('editEventTime')?.value, 10);
+      if (isNaN(newMinutes) || newMinutes < 0) {
+        notificationManager.error('Please enter a valid time in minutes');
+        return;
+      }
 
-    const newRawTime = newMinutes * 60;
-    const newTimestamp = formatMatchTime(newRawTime);
+      const newRawTime = newMinutes * 60;
+      const newTimestamp = formatMatchTime(newRawTime);
 
-    // Handle different event types
-    if (gameState.editingEventType === 'goal') {
-      stateManager.updateGoal(gameState.editingEventIndex, {
-        rawTime: newRawTime,
-        timestamp: newTimestamp
-      });
-    } else if (gameState.editingEventType === 'matchEvent') {
-      const eventIndex = parseInt(document.getElementById('editEventIndex')?.value);
-      const newType = document.getElementById('editEventType')?.value;
-      const newNotes = document.getElementById('editEventNotes')?.value;
+      // Handle different event types
+      if (gameState.editingEventType === 'goal') {
+        stateManager.updateGoal(gameState.editingEventIndex, {
+          rawTime: newRawTime,
+          timestamp: newTimestamp
+        });
+      } else if (gameState.editingEventType === 'matchEvent') {
+        const eventIndexElement = document.getElementById('editEventIndex');
+        const eventTypeElement = document.getElementById('editEventType');
+        const eventNotesElement = document.getElementById('editEventNotes');
+        
+        if (!eventIndexElement) {
+          notificationManager.error('Error: Event index not found');
+          return;
+        }
+        
+        const eventIndex = parseInt(eventIndexElement.value, 10);
+        if (isNaN(eventIndex) || eventIndex < 0 || eventIndex >= gameState.matchEvents.length) {
+          notificationManager.error('Error: Invalid event index');
+          return;
+        }
+        
+        const newType = eventTypeElement?.value || gameState.matchEvents[eventIndex].type;
+        const newNotes = eventNotesElement?.value || '';
 
-      const updatedEvent = {
-        ...gameState.matchEvents[eventIndex],
-        type: newType,
-        notes: newNotes,
-        rawTime: newRawTime,
-        timestamp: newTimestamp
-      };
+        const updatedEvent = {
+          ...gameState.matchEvents[eventIndex],
+          type: newType,
+          notes: newNotes,
+          rawTime: newRawTime,
+          timestamp: newTimestamp
+        };
 
-      stateManager.updateMatchEvent(eventIndex, updatedEvent);
+        stateManager.updateMatchEvent(eventIndex, updatedEvent);
+      }
+
+      // Update displays
+      this.updateMatchLog();
+      this.updateEventStatistics();
+
+      // Save data
+      storageHelpers.saveCompleteMatchData(gameState, attendanceManager.getMatchAttendance());
+
+      // Clean up and close modal
+      stateManager.clearEditingEvent();
+      hideModal('editEventModal');
+      notificationManager.success('Event updated successfully');
+      
+    } catch (error) {
+      console.error('Error updating event:', error);
+      notificationManager.error('Error updating event. Please try again.');
     }
-
-    // Update displays
-    this.updateMatchLog();
-    this.updateEventStatistics();
-
-    // Save data
-    storageHelpers.saveCompleteMatchData(gameState, attendanceManager.getMatchAttendance());
-
-    // Clean up and close modal
-    stateManager.clearEditingEvent();
-    hideModal('editEventModal');
-    notificationManager.success('Event updated successfully');
   }
 
   // Update match log display
@@ -279,16 +315,27 @@ class CombinedEventsManager {
 
     const stats = {
       goals: gameState.goals.filter(goal => !goal.disallowed).length,
-      cards: allEvents.filter(event => 
-        event.type && (event.type.toLowerCase().includes('card') || 
-                      event.type.toLowerCase().includes('yellow') || 
-                      event.type.toLowerCase().includes('red'))
-      ).length,
-      fouls: allEvents.filter(event => 
-        event.type && event.type.toLowerCase().includes('foul')
-      ).length,
+      cards: 0,
+      fouls: 0,
+      penalties: 0,
+      incidents: 0,
       total: allEvents.length
     };
+
+    // Count different event types
+    gameState.matchEvents.forEach(event => {
+      const eventType = event.type.toLowerCase();
+
+      if (eventType.includes('card')) {
+        stats.cards++;
+      } else if (eventType.includes('foul')) {
+        stats.fouls++;
+      } else if (eventType.includes('penalty')) {
+        stats.penalties++;
+      } else if (eventType.includes('incident')) {
+        stats.incidents++;
+      }
+    });
 
     return stats;
   }
@@ -368,7 +415,13 @@ class CombinedEventsManager {
           <i class="fas fa-${event.disallowed ? 'check' : 'ban'}"></i>
         </button>`;
 
-      return `${toggleButton}${editButton.replace('">', ' me-2">')}${deleteButton}`;
+      const goalEditButton = `
+        <button class="btn btn-sm btn-outline-primary me-2" 
+          onclick="window.EventsModule.openEditEventModal(${event.originalIndex}, '${event.updatetype}')">
+          <i class="fas fa-edit"></i>
+        </button>`;
+
+      return `${toggleButton}${goalEditButton}${deleteButton}`;
     }
 
     return `${editButton}${deleteButton}`;
@@ -485,15 +538,36 @@ export const {
 
 // Alias for backward compatibility
 export const eventsManager = combinedEventsManager;
-export const enhancedEventsManager = combinedEventsManager;
 
 // Update match log function for global access
 export function updateMatchLog() {
   combinedEventsManager.updateMatchLog();
 }
 
+// Store pending deletion info
+let pendingDeletion = null;
+
 // Delete log entry function for global access
 export function deleteLogEntry(index, type) {
+  // Store deletion info for confirmation
+  pendingDeletion = { index, type };
+  
+  const itemType = type === 'goal' ? 'goal' : 'event';
+  const itemName = type === 'goal' ? 
+    (gameState.goals[index]?.goalScorerName || 'Unknown') : 
+    (gameState.matchEvents[index]?.type || 'Unknown');
+  
+  // Show confirmation modal
+  showEventDeleteModal(itemType, itemName);
+}
+
+// Function to actually perform the deletion
+function performEventDeletion() {
+  if (!pendingDeletion) return;
+  
+  const { index, type } = pendingDeletion;
+  const itemType = type === 'goal' ? 'goal' : 'event';
+
   if (type === 'goal') {
     if (index < 0 || index >= gameState.goals.length) return;
     stateManager.removeGoal(index);
@@ -508,5 +582,117 @@ export function deleteLogEntry(index, type) {
   combinedEventsManager.updateEventStatistics();
   
   storageHelpers.saveCompleteMatchData(gameState, attendanceManager.getMatchAttendance());
-  notificationManager.error('Entry deleted');
+  notificationManager.success(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} deleted`);
+  
+  // Clear pending deletion
+  pendingDeletion = null;
+}
+
+// Function to show event delete confirmation modal
+function showEventDeleteModal(itemType, itemName) {
+  // Create modal if it doesn't exist
+  if (!document.getElementById('eventDeleteModal')) {
+    createEventDeleteModal();
+  }
+  
+  // Update modal content
+  const modalTitle = document.getElementById('eventDeleteModalTitle');
+  const modalBody = document.getElementById('eventDeleteModalBody');
+  
+  if (modalTitle) {
+    modalTitle.innerHTML = `<i class="fas fa-exclamation-triangle text-warning me-2"></i>Confirm Deletion`;
+  }
+  
+  if (modalBody) {
+    modalBody.innerHTML = `
+      <p class="mb-3">Are you sure you want to delete this ${itemType}?</p>
+      <div class="alert alert-warning">
+        <strong>${itemType.charAt(0).toUpperCase() + itemType.slice(1)}:</strong> ${itemName}
+      </div>
+      <p class="text-muted small mb-0">This action cannot be undone.</p>
+    `;
+  }
+  
+  // Show modal
+  const modal = document.getElementById('eventDeleteModal');
+  if (modal) {
+    modal.style.display = 'block';
+    modal.classList.add('show');
+    document.body.classList.add('modal-open');
+  }
+}
+
+// Function to create event delete confirmation modal
+function createEventDeleteModal() {
+  const modalHTML = `
+    <div class="modal fade" id="eventDeleteModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="eventDeleteModalTitle">
+              <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+            </h5>
+            <button type="button" class="btn btn-light btn-sm rounded-circle" data-dismiss="modal" aria-label="Close" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-times text-danger" style="font-size: 14px;"></i>
+            </button>
+          </div>
+          <div class="modal-body" id="eventDeleteModalBody">
+            <!-- Content will be populated dynamically -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelEventDeleteBtn">
+              <i class="fas fa-times me-1"></i>Cancel
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmEventDeleteBtn">
+              <i class="fas fa-trash me-1"></i>Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // Add event listeners
+  const modal = document.getElementById('eventDeleteModal');
+  const cancelBtn = document.getElementById('cancelEventDeleteBtn');
+  const confirmBtn = document.getElementById('confirmEventDeleteBtn');
+  const closeBtn = modal.querySelector('[data-dismiss="modal"]');
+  
+  // Cancel button
+  cancelBtn?.addEventListener('click', () => {
+    hideEventDeleteModal();
+    pendingDeletion = null;
+  });
+  
+  // Close button
+  closeBtn?.addEventListener('click', () => {
+    hideEventDeleteModal();
+    pendingDeletion = null;
+  });
+  
+  // Confirm button
+  confirmBtn?.addEventListener('click', () => {
+    hideEventDeleteModal();
+    performEventDeletion();
+  });
+  
+  // Click outside to close
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      hideEventDeleteModal();
+      pendingDeletion = null;
+    }
+  });
+}
+
+// Function to hide event delete modal
+function hideEventDeleteModal() {
+  const modal = document.getElementById('eventDeleteModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('show');
+    document.body.classList.remove('modal-open');
+  }
 }

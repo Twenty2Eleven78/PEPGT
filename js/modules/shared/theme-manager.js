@@ -19,7 +19,7 @@ class ThemeManager {
         primaryDark: '#c82333'
       },
       blue: {
-        name: 'Blue  (Default)',
+        name: 'Blue (Default)',
         primary: '#007bff',
         primaryLight: '#0d6efd',
         primaryDark: '#0056b3'

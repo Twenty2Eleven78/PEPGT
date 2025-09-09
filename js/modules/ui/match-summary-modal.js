@@ -231,7 +231,9 @@ class MatchSummaryModal {
               <h5 class="modal-title">
                 <i class="fas fa-code"></i> Raw Match Data
               </h5>
-              <button type="button" class="btn-close btn-close-white" id="closeRawDataModalBtn" aria-label="Close"></button>
+                <button type="button" class="btn btn-primary btn-sm rounded-circle" data-dismiss="modal" aria-label="Close" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-times" style="font-size: 14px;"></i>
+                </button>
             </div>
             <div class="modal-body p-0">
               <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light">

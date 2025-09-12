@@ -56,7 +56,7 @@ class RosterModal {
                 <div class="input-group">
                   <input type="text" id="newPlayerName" class="form-control" placeholder="Name">&nbsp;
                   <input type="number" id="newPlayerShirtNumber" class="form-control" placeholder="Shirt #" min="0" max="99">&nbsp;
-                  <button class="btn btn-danger" id="addPlayerBtn" type="button">
+                  <button class="btn btn-primary" id="addPlayerBtn" type="button">
                     <i class="fas fa-plus me-2"></i>Add Player
                   </button>
                 </div>
@@ -68,7 +68,7 @@ class RosterModal {
               <div class="mb-3">
                 <label for="bulkPlayerNames" class="form-label">Paste names (comma or new-line separated):</label>
                 <textarea id="bulkPlayerNames" class="form-control mb-2" rows="3" placeholder="e.g. Player One, Player Two&#x0a;Player Three"></textarea>
-                <button id="addPlayersBulkBtn" class="btn btn-danger w-100" type="button">
+                <button id="addPlayersBulkBtn" class="btn btn-primary w-100" type="button">
                   <i class="fas fa-list-ul me-2"></i>Add Players from List
                 </button>
               </div>
@@ -90,7 +90,7 @@ class RosterModal {
               </div>
 
               <hr class="my-3">
-              <button id="clearRosterBtn" class="btn btn-danger w-100">
+              <button id="clearRosterBtn" class="btn btn-primart w-100">
                 <i class="fas fa-trash-alt me-2"></i>Clear All Players
               </button>
             </div>

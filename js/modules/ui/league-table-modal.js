@@ -255,7 +255,7 @@ class LeagueTableModal {
   }
 
   async autoFetchLeagueTable() {
-    const hardcodedUrl = 'https://fulltime.thefa.com/table.html?league=2373903&selectedSeason=83710004&selectedFixtureGroupAgeGroup=9&previousSelectedFixtureGroupAgeGroup=9&selectedDivision=497213589&selectedCompetition=0&selectedFixtureGroupKey=1_458390244%20#tab-2';
+    const hardcodedUrl = '';
     
     const urlInput = document.getElementById('faUrlInput');
     const content = document.getElementById('leagueTableContent');

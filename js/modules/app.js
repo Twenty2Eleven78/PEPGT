@@ -206,7 +206,7 @@ export async function initializeApp() {
       gameState.gameTime = config.get('match.defaultGameTime', 4200);
     }
 
-    console.log(`Initializing ${config.get('app.name', 'NUFC GameTime')} v${config.get('app.version', '4.0')}`);
+    console.log(`Initializing ${config.get('app.name', 'GameTime App')} v${config.get('app.version', '4.0')}`);
 
   // Initialize custom modal system
   initializeCustomModals();

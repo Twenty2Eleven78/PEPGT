@@ -10,10 +10,10 @@ import { config } from '../shared/config.js';
  * @returns {Object} Manifest object
  */
 export function generateManifest() {
-  const appName = config.get('app.name', 'NUFC GameTime');
-  const shortName = config.get('app.shortName', 'NUGT');
+  const appName = config.get('app.name', 'GameTime');
+  const shortName = config.get('app.shortName', 'GT');
   const description = config.get('app.description', 'Football match tracking application');
-  const clubName = config.get('team.clubName', 'Netherton United');
+  const clubName = config.get('team.clubName', 'Football United');
   
   // Get theme color based on default theme
   const defaultTheme = config.get('ui.theme.defaultTheme', 'red');
@@ -107,8 +107,8 @@ export function generateManifest() {
  * Update the page title based on configuration
  */
 export function updatePageTitle() {
-  const appName = config.get('app.name', 'NUFC GameTime');
-  const version = config.get('app.version', '4.0');
+  const appName = config.get('app.name', 'GameTime');
+  const version = config.get('app.version', '5.0');
   document.title = `${appName} v${version}`;
 }
 

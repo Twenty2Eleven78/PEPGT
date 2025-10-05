@@ -122,18 +122,18 @@ class ConfigManager {
   getDefaultConfig() {
     return {
       app: {
-        name: 'NUFC GameTime',
-        shortName: 'NUGT',
-        version: '4.0',
+        name: 'GameTime',
+        shortName: 'GT',
+        version: '5.0',
         description: 'Football match tracking and statistics application',
-        author: 'NUFC GameTime Team'
+        author: 'Mark Van-Kerro'
       },
       team: {
-        defaultTeam1Name: 'Netherton',
+        defaultTeam1Name: 'Home',
         defaultTeam2Name: 'Opposition',
-        clubName: 'Netherton United',
+        clubName: 'Football United',
         season: '2025-2026',
-        ageGroup: 'U13 Girls (U14)'
+        ageGroup: 'Any'
       },
       roster: {
         defaultPlayers: [],

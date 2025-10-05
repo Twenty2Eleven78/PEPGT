@@ -1,6 +1,6 @@
 {
-    "name": "Netherton United Game Time App",
-    "short_name": "NUGT",
+    "name": "PEPFC Game Time App",
+    "short_name": "PEPFCGT",
     "start_url": "./",
     "scope": "./",
     "theme_color": "#dc3545",
@@ -32,7 +32,7 @@
             "purpose": "maskable"
         }
     ],
-    "id": "NUGT",
+    "id": "PEPFCGT",
     "lang": "en",
     "orientation": "portrait-primary",
     "categories": [

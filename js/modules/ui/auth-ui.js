@@ -19,7 +19,7 @@ class AuthUI {
   async init() {
     // Ensure body doesn't have authenticated class initially
     document.body.classList.remove('authenticated');
-    
+
     // Create auth modal if it doesn't exist
     if (!document.getElementById('authModal')) {
       this._createAuthModal();
@@ -44,7 +44,7 @@ class AuthUI {
 
     // Not authenticated - update auth state and show modal
     this._updateAuthState(false);
-    
+
     // Show the auth modal
     requestAnimationFrame(() => {
       this.showAuthModal();
@@ -294,7 +294,7 @@ class AuthUI {
 
         // Trigger logout
         authService.logout();
-        
+
         // Show the auth modal
         requestAnimationFrame(() => {
           this.showAuthModal();
@@ -355,14 +355,14 @@ class AuthUI {
   _bindInputValidation() {
     const emailInput = document.getElementById('usernameInput');
     const loginButton = document.getElementById('loginButton');
-    
+
     if (emailInput && loginButton) {
       emailInput.addEventListener('input', () => {
         const email = emailInput.value.trim();
         const isValid = email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        
+
         loginButton.disabled = !isValid;
-        
+
         // Update input validation state
         if (email) {
           if (isValid) {
@@ -404,21 +404,21 @@ class AuthUI {
             if (emailInput) {
               emailInput.value = '';
             }
-            
+
             // Hide modal
             const authModal = document.getElementById('authModal');
             if (authModal) {
               authModal.classList.remove('show');
               authModal.style.display = 'none';
               document.body.classList.remove('modal-open');
-              
+
               // Remove backdrop
               const backdrop = document.querySelector('.modal-backdrop');
               if (backdrop) {
                 backdrop.remove();
               }
             }
-            
+
             this._updateAuthState(true);
           }
         } catch (error) {
@@ -439,7 +439,7 @@ class AuthUI {
   _updateAuthState(isAuthenticated) {
     // Update body class for authentication state
     document.body.classList.toggle('authenticated', isAuthenticated);
-    
+
     // Create profile button if it doesn't exist
     this._createProfileButton();
 
@@ -480,7 +480,7 @@ class AuthUI {
         profileButton.classList.remove('btn-outline-primary');
         profileButton.classList.add('btn-outline-secondary');
       }
-      
+
       if (profileUsername) {
         profileUsername.textContent = 'Guest';
       }

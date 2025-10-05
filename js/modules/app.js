@@ -35,8 +35,10 @@ import { matchLoadModal } from './ui/match-load-modal.js';
 import { matchSummaryModal } from './ui/match-summary-modal.js';
 import { rawDataModal } from './ui/raw-data-modal.js';
 import { newMatchModal } from './ui/new-match-modal.js';
-import { statisticsModal } from './ui/statistics-modal.js';
+
+import { statisticsTab } from './ui/statistics-tab.js';
 import { touchGestures } from './ui/touch-gestures.js';
+import { leagueTableModal } from './ui/league-table-modal.js';
 import teamModals from './ui/team-modals.js';
 import goalModal from './ui/goal-modal.js';
 import eventModals from './ui/event-modals.js';
@@ -171,8 +173,40 @@ function enhanceTouchTargets() {
 }
 
 // Initialize application
-export function initializeApp() {
-  console.log('Initializing NUFC GameTime App v4.0 - Enhanced with Custom Framework');
+export async function initializeApp() {
+  try {
+    // Load configuration first
+    console.log('Loading application configuration...');
+    const { config } = await import('./shared/config.js');
+    
+    try {
+      await config.load();
+      console.log('Configuration loaded successfully into app');
+    } catch (error) {
+      console.warn('⚠ Configuration loading failed, using defaults:', error.message);
+    }
+    
+    // Validate configuration
+    const validation = config.validate();
+    if (!validation.isValid) {
+      console.warn('Configuration validation warnings:', validation.errors);
+    }
+
+    // Initialize manifest and page metadata
+    const { initManifest } = await import('./services/manifest-generator.js');
+    initManifest();
+
+    // Initialize team branding
+    const { initTeamBranding } = await import('./ui/team-branding.js');
+    initTeamBranding();
+
+    // Update game state with config values now that config is loaded
+    const { gameState } = await import('./data/state.js');
+    if (gameState.gameTime === 4200) { // Only update if still using default
+      gameState.gameTime = config.get('match.defaultGameTime', 4200);
+    }
+
+    console.log(`Initializing ${config.get('app.name', 'NUFC GameTime')} v${config.get('app.version', '4.0')}`);
 
   // Initialize custom modal system
   initializeCustomModals();
@@ -203,6 +237,13 @@ export function initializeApp() {
   teamManager.initializeTeams();
   rosterManager.init();
   attendanceManager.init();
+  
+  // Ensure attendance is properly initialized after roster is loaded
+  setTimeout(() => {
+    if (attendanceManager.getMatchAttendance) {
+      attendanceManager.getMatchAttendance(); // This will initialize default attendance if needed
+    }
+  }, 200);
 
   // Initialize UI components
   bindEventListeners();
@@ -214,7 +255,10 @@ export function initializeApp() {
   matchLoadModal.init();
   matchSummaryModal.init();
   rawDataModal.init();
-  statisticsModal.init();
+
+  statisticsTab.init();
+  touchGestures.init();
+  leagueTableModal.init();
 
   // Initialize modal modules
   teamModals.init();
@@ -228,8 +272,8 @@ export function initializeApp() {
   // Make modals available globally after initialization
   window.goalModal = goalModal;
 
-  // Initialize theme manager
-  themeManager.init();
+  // Initialize theme manager first
+  await themeManager.init();
 
   // Initialize timer with enhanced state recovery
   timerController.initialize();
@@ -252,6 +296,15 @@ export function initializeApp() {
   updateMatchLog();
 
   console.log('App initialization complete');
+
+  } catch (error) {
+    console.error('Failed to initialize application:', error);
+    
+    // Show error notification if notification service is available
+    if (notificationManager) {
+      notificationManager.error('Failed to initialize application');
+    }
+  }
 }
 
 // Load application state from storage
@@ -312,7 +365,9 @@ function bindEventListeners() {
       defaultNotes: ''
     }, async ({ title, notes }) => {
       try {
-        // Gather match data
+        // Gather match data with saved attendance and lineup
+        const savedAttendance = storage.load(STORAGE_KEYS.MATCH_ATTENDANCE, []);
+        const savedLineup = storage.load('MATCH_LINEUP', null);
         const matchData = {
           title,
           notes,
@@ -326,7 +381,8 @@ function bindEventListeners() {
           team2Name,
           score1,
           score2,
-          attendance: attendanceManager.getMatchAttendance(),
+          attendance: savedAttendance,
+          matchLineup: savedLineup || gameState.matchLineup,
           savedAt: Date.now()
         };
 
@@ -407,13 +463,7 @@ function bindEventListeners() {
     saveMatchDataBtnCard.addEventListener('click', handleSaveMatch);
   }
 
-  // Statistics button
-  const statisticsBtn = document.getElementById('statisticsBtn');
-  if (statisticsBtn) {
-    statisticsBtn.addEventListener('click', () => {
-      statisticsModal.show();
-    });
-  }
+
 
   // Timer controls
   const startPauseButton = domCache.get('startPauseButton');
@@ -511,6 +561,14 @@ function bindEventListeners() {
     });
   }
 
+  // League table button
+  const leagueTableBtn = document.getElementById('leagueTableBtn');
+  if (leagueTableBtn) {
+    leagueTableBtn.addEventListener('click', () => {
+      leagueTableModal.show();
+    });
+  }
+
   // Reset button is now handled by the reset modal system
 }
 
@@ -552,6 +610,9 @@ function resetTracker() {
 
   // Clear storage (except auth data)
   storage.clear();
+  
+  // Explicitly clear match lineup data
+  storage.remove('MATCH_LINEUP');
 
   // Show confirmation and redirect
   notificationManager.success('Game reset successfully');

@@ -42,7 +42,17 @@ class TimerController {
     }, GAME_CONFIG.TIMER_UPDATE_INTERVAL);
 
     const isNewGame = gameState.seconds === 0;
-    const buttonText = isNewGame ? 'Game Started' : 'Game Resumed';
+    const isSecondHalf = gameState.isSecondHalf;
+    let buttonText;
+    
+    if (isNewGame) {
+      buttonText = 'Game Started';
+    } else if (isSecondHalf) {
+      buttonText = 'Second Half Started';
+    } else {
+      buttonText = 'Game Resumed';
+    }
+    
     this._updateButtonUI('Game in Progress', 'btn-success', formatTime(gameState.seconds));
     notificationManager.success(buttonText + '!');
 
@@ -118,15 +128,16 @@ class TimerController {
 
   // Handle half time
   handleHalfTime() {
-    const halfTimeSeconds = gameState.gameTime / 2;
+    // Set timer to half-time position (half of total game time)
+    const halfTimeSeconds = Math.floor(gameState.gameTime / 2);
 
     this._stopTimer();
     stateManager.setTimerState(halfTimeSeconds, false, null);
     stateManager.setHalfState(true);
 
-    this._updateButtonUI('Half Time Break', 'btn-danger', formatTime(halfTimeSeconds));
+    this._updateButtonUI('Half Time Break', 'btn-warning', formatTime(halfTimeSeconds));
     this.updateDisplay();
-    notificationManager.info('Half Time - Game Paused');
+    notificationManager.info('Half Time - Timer set to ' + formatTime(halfTimeSeconds));
 
     storageHelpers.saveGameState(gameState);
   }
@@ -148,12 +159,9 @@ class TimerController {
     const button = domCache.get('startPauseButton');
     if (!button) return;
 
-    const oldStatusClass = newStatusClass === 'btn-success' ? 'btn-danger' : 'btn-success';
-    button.classList.remove(oldStatusClass);
-
-    if (button.classList.contains(newStatusClass)) {
-      button.classList.remove(newStatusClass);
-    }
+    // Remove all possible button state classes
+    button.classList.remove('btn-success', 'btn-danger', 'btn-warning');
+    // Add the new class
     button.classList.add(newStatusClass);
 
     // Update the button content while preserving the timer display structure

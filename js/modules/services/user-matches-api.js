@@ -6,7 +6,8 @@
 import { authService } from './auth.js';
 
 const API_ENDPOINTS = {
-  USER_MATCHES: '/.netlify/functions/user-matches'
+  USER_MATCHES: '/.netlify/functions/user-matches',
+  STATISTICS: '/.netlify/functions/statistics'
 };
 
 const HTTP_METHODS = {
@@ -140,6 +141,65 @@ class UserMatchesAPI {
     return response.data;
   }
 
+  async saveStatistics(statistics) {
+    if (!statistics || typeof statistics !== 'object') {
+      throw new Error('Invalid statistics data provided');
+    }
+
+    const token = await this._getAuthToken();
+    const currentUser = await authService.getCurrentUser();
+
+    const statsToSave = {
+      ...statistics,
+      savedBy: currentUser?.email,
+      savedAt: Date.now()
+    };
+
+    const requestOptions = {
+      method: HTTP_METHODS.PUT,
+      headers: this._buildHeaders(token, true),
+      body: JSON.stringify(statsToSave)
+    };
+
+    const response = await this._makeRequest(API_ENDPOINTS.STATISTICS, requestOptions);
+    this._clearCache();
+    return response;
+  }
+
+  async deleteStatistics() {
+    const token = await this._getAuthToken();
+    const requestOptions = {
+      method: HTTP_METHODS.DELETE,
+      headers: this._buildHeaders(token)
+    };
+
+    const response = await this._makeRequest(API_ENDPOINTS.STATISTICS, requestOptions);
+    this._clearCache();
+    return response;
+  }
+
+  async loadStatistics() {
+    console.log('🌐 API: Loading statistics from cloud via new endpoint...');
+    const token = await this._getAuthToken();
+    const requestOptions = {
+      method: HTTP_METHODS.GET,
+      headers: this._buildHeaders(token)
+    };
+
+    try {
+      const statsData = await this._makeRequest(API_ENDPOINTS.STATISTICS, requestOptions);
+      console.log('📊 API: Extracted statistics data:', !!statsData);
+      return statsData;
+    } catch (error) {
+      console.error('❌ API: Statistics load error:', error);
+      if (error.message.includes('404')) {
+        console.log('🔄 API: No statistics found (404)');
+        return null;
+      }
+      throw error;
+    }
+  }
+
   // Clear all cached data
   clearCache() {
     this._clearCache();
@@ -156,6 +216,15 @@ class UserMatchesAPI {
 
   _enhanceMatchData(matchData) {
     const currentUser = authService.getCurrentUser();
+    
+    // Don't override system identifiers for statistics
+    if (matchData._statsUpdate || matchData.userId === 'system_statistics') {
+      return {
+        ...matchData,
+        timestamp: new Date().toISOString()
+      };
+    }
+    
     return {
       ...matchData,
       userEmail: currentUser?.email || 'unknown@example.com',
@@ -193,8 +262,18 @@ class UserMatchesAPI {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
+      // Add cache-busting headers for GET requests to ensure fresh data
+      const requestOptions = { ...options };
+      if (options.method === 'GET' || !options.method) {
+        requestOptions.headers = {
+          ...requestOptions.headers,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        };
+      }
+
       const response = await fetch(url, {
-        ...options,
+        ...requestOptions,
         signal: controller.signal
       });
 

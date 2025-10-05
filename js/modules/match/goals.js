@@ -11,6 +11,7 @@ import { notificationManager } from '../services/notifications.js';
 import { showModal, hideModal } from '../ui/modals.js';
 import { updateMatchLog, combinedEventsManager } from './combined-events.js';
 import { attendanceManager } from '../services/attendance.js';
+import { momentumTracker } from './momentum.js';
 
 // Goal management class
 class GoalManager {
@@ -69,6 +70,9 @@ class GoalManager {
     // Show appropriate notification
     const notificationType = isOpposition ? 'error' : 'success';
     notificationManager[notificationType](`Goal scored by ${scorerName}!`);
+
+    // Update momentum
+    momentumTracker.onEventUpdate();
 
     // Save and cleanup
     storageHelpers.saveCompleteMatchData(gameState, attendanceManager.getMatchAttendance());
@@ -215,6 +219,9 @@ function updateGoalStatus(index) {
   goalManager._recalculateScores();
   updateMatchLog();
 
+  // Update momentum
+  momentumTracker.onEventUpdate();
+
   // Save updated goals data
   storageHelpers.saveMatchData(gameState);
 
@@ -283,7 +290,7 @@ function createGoalDisallowModal() {
               <i class="fas fa-ban me-2"></i>Disallow Goal
             </h5>
             <button type="button" class="btn btn-primary btn-sm rounded-circle" data-dismiss="modal" aria-label="Close" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-              <i class="fas fa-times " style="font-size: 14px;"></i>
+              <i class="fas fa-times" style="font-size: 14px;"></i>
             </button>
           </div>
           <div class="modal-body" id="goalDisallowModalBody">

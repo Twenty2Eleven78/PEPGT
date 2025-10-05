@@ -1,0 +1,107 @@
+{
+  "_comments": {
+    "app": "App branding and identity - customize name, shortName (4 chars max), version, description, author",
+    "team": "Team information - set your team name, opponent default, club name, season, age group",
+    "roster": "Default player roster - add your team's players with names and shirt numbers",
+    "match": "Match timing - defaultGameTime in seconds (70min=4200s), timer intervals in milliseconds",
+    "sharing": "Match sharing options - platforms (whatsapp/clipboard), messages, what to include",
+    "ui": "User interface - theme colors and performance settings"
+  },
+  "app": {
+    "name": "PEPFC GameTime",
+    "shortName": "PEPFC",
+    "version": "4.0",
+    "description": "Football match tracking and statistics application",
+    "author": "Mark Van-Kerro"
+  },
+  "team": {
+    "defaultTeam1Name": "Peterborough EP",
+    "defaultTeam2Name": "Opposition",
+    "clubName": "Peterborough EPFC",
+    "season": "2025-2026",
+    "ageGroup": "U8 Boys"
+  },
+  "roster": {
+    "defaultPlayers": [
+      {
+        "name": "Carter",
+        "shirtNumber": null
+      },
+      {
+        "name": "Evanas",
+        "shirtNumber": null
+      },
+      {
+        "name": "Hari",
+        "shirtNumber": null
+      },
+      {
+        "name": "Jayson",
+        "shirtNumber": null
+      },
+      {
+        "name": "Joshua",
+        "shirtNumber": null
+      },
+      {
+        "name": "Logan",
+        "shirtNumber": null
+      },
+      {
+        "name": "Maison",
+        "shirtNumber": null
+      },
+      {
+        "name": "Mason",
+        "shirtNumber": null
+      },
+      {
+        "name": "Moses",
+        "shirtNumber": null
+      },
+      {
+        "name": "Nathan",
+        "shirtNumber": null
+      },
+      {
+        "name": "Alex",
+        "shirtNumber": null
+      }
+    ],
+    "maxPlayers": 25,
+    "allowDuplicateNumbers": true,
+    "autoSort": true
+  },
+  "match": {
+    "defaultGameTime": 2400,
+    "timerUpdateInterval": 100,
+    "autoSaveInterval": 5000,
+    "_availableDurations": "40min=2400s, 50min=3000s, 60min=3600s, 70min=4200s, 80min=4800s, 90min=5400s"
+  },
+  "sharing": {
+    "enabledPlatforms": [
+      "whatsapp",
+      "clipboard"
+    ],
+    "defaultMessage": "Check out our match results!",
+    "includeScore": true,
+    "includeEvents": true,
+    "includeStatistics": false
+  },
+  "ui": {
+    "theme": {
+      "defaultTheme": "blue",
+      "availableThemes": [
+        "red",
+        "blue",
+        "green",
+        "purple",
+        "orange",
+        "yellow",
+        "cyan",
+        "pink"
+      ]
+    },
+    "debounceDelay": 300
+  }
+}

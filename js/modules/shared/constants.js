@@ -1,14 +1,47 @@
 /**
  * Shared Constants
  * Centralized configuration and constants for the NUFC GameTime application
+ * Note: Many values are now loaded from config.json via the config manager
  */
 
-// Application Configuration
+import { config } from './config.js';
+
+// Application Configuration - now loaded from config.json with fallbacks
 export const APP_CONFIG = {
-  NAME: 'NUFC GameTime',
-  VERSION: '4.0',
-  AUTHOR: 'NUFC GameTime Team',
-  DESCRIPTION: 'Football match tracking and statistics application'
+  get NAME() { 
+    try {
+      return config.get('app.name', 'NUFC GameTime');
+    } catch (error) {
+      return 'NUFC GameTime';
+    }
+  },
+  get VERSION() { 
+    try {
+      return config.get('app.version', '4.0');
+    } catch (error) {
+      return '4.0';
+    }
+  },
+  get AUTHOR() { 
+    try {
+      return config.get('app.author', 'NUFC GameTime Team');
+    } catch (error) {
+      return 'NUFC GameTime Team';
+    }
+  },
+  get DESCRIPTION() { 
+    try {
+      return config.get('app.description', 'Football match tracking and statistics application');
+    } catch (error) {
+      return 'Football match tracking and statistics application';
+    }
+  }
+};
+
+// Cache Configuration
+export const CACHE_CONFIG = {
+  NAME: 'nugt-cache-v325',
+  VERSION: 'v325'
 };
 
 // Storage Keys - Local Storage identifiers
@@ -40,35 +73,76 @@ export const STORAGE_KEYS = {
   PLAYER_STATS: 'nugt_playerStats'
 };
 
-// Game Configuration
+// Game Configuration - now loaded from config.json with fallbacks
 export const GAME_CONFIG = {
   // Time Settings (in seconds)
-  DEFAULT_GAME_TIME: 4200, // 70 minutes
-  HALF_TIME_DURATION: 2100, // 35 minutes
-  FULL_TIME_DURATION: 4200, // 70 minutes
-  EXTRA_TIME_DURATION: 1800, // 30 minutes
+  get DEFAULT_GAME_TIME() { 
+    try {
+      return config.get('match.defaultGameTime', 4200);
+    } catch (error) {
+      return 4200;
+    }
+  },
+  get HALF_TIME_DURATION() { 
+    try {
+      return Math.floor(config.get('match.defaultGameTime', 4200) / 2);
+    } catch (error) {
+      return 2100;
+    }
+  },
+  get FULL_TIME_DURATION() { 
+    try {
+      return config.get('match.defaultGameTime', 4200);
+    } catch (error) {
+      return 4200;
+    }
+  },
 
   // Timer Settings (in milliseconds)
-  TIMER_UPDATE_INTERVAL: 100,
+  get TIMER_UPDATE_INTERVAL() { 
+    try {
+      return config.get('match.timerUpdateInterval', 100);
+    } catch (error) {
+      return 100;
+    }
+  },
   STORAGE_DEBOUNCE_DELAY: 100,
-  AUTO_SAVE_INTERVAL: 5000, // 5 seconds
+  get AUTO_SAVE_INTERVAL() { 
+    try {
+      return config.get('match.autoSaveInterval', 5000);
+    } catch (error) {
+      return 5000;
+    }
+  },
 
-  // Team Defaults
-  DEFAULT_TEAM1_NAME: 'Netherton',
-  DEFAULT_TEAM2_NAME: 'Opposition',
-
-  // Match Settings
-  MAX_PLAYERS_PER_TEAM: 22,
-  MIN_PLAYERS_PER_TEAM: 7,
-  MAX_SUBSTITUTIONS: 5,
+  // Team Defaults - now configurable
+  get DEFAULT_TEAM1_NAME() { 
+    try {
+      return config.get('team.defaultTeam1Name', 'Netherton');
+    } catch (error) {
+      return 'Netherton';
+    }
+  },
+  get DEFAULT_TEAM2_NAME() { 
+    try {
+      return config.get('team.defaultTeam2Name', 'Opposition');
+    } catch (error) {
+      return 'Opposition';
+    }
+  },
 
   // UI Settings
-  NOTIFICATION_DURATION: 3000, // 3 seconds
-  MODAL_ANIMATION_DURATION: 300, // 0.3 seconds
-  DEBOUNCE_DELAY: 300 // 0.3 seconds
+  get DEBOUNCE_DELAY() { 
+    try {
+      return config.get('ui.debounceDelay', 300);
+    } catch (error) {
+      return 300;
+    }
+  }
 };
 
-// Match Event Types
+// Match Event Types - now configurable via event-config.js
+// These are kept for backward compatibility
 export const EVENT_TYPES = {
   // Disciplinary Events
   YELLOW_CARD: 'Yellow Card',
@@ -78,17 +152,12 @@ export const EVENT_TYPES = {
   // Match Events
   FOUL: 'Foul',
   PENALTY: 'Penalty',
-  FREE_KICK: 'Free Kick',
-  CORNER: 'Corner',
-  THROW_IN: 'Throw In',
   OFFSIDE: 'Offside',
 
   // Game Flow Events
   GAME_STARTED: 'Game Started',
   HALF_TIME: 'Half Time',
   FULL_TIME: 'Full Time',
-  EXTRA_TIME: 'Extra Time',
-  PENALTY_SHOOTOUT: 'Penalty Shootout',
 
   // General Events
   INCIDENT: 'Incident',
@@ -96,23 +165,15 @@ export const EVENT_TYPES = {
   SUBSTITUTION: 'Substitution'
 };
 
-// Event Categories for filtering and organization
-export const EVENT_CATEGORIES = {
-  DISCIPLINARY: 'disciplinary',
-  MATCH_FLOW: 'match_flow',
-  GAME_EVENTS: 'game_events',
-  ADMINISTRATIVE: 'administrative'
-};
-
-// Event Icons mapping
+// Event Icons mapping - now configurable via event-config.js
+// These are kept for backward compatibility
 export const EVENT_ICONS = {
   [EVENT_TYPES.YELLOW_CARD]: 'fas fa-square text-warning',
   [EVENT_TYPES.RED_CARD]: 'fas fa-square text-danger',
   [EVENT_TYPES.SIN_BIN]: 'fas fa-clock text-info',
   [EVENT_TYPES.FOUL]: 'fas fa-hand-paper text-warning',
+  [EVENT_TYPES.OFFSIDE]: 'fas fa-flag text-warning',
   [EVENT_TYPES.PENALTY]: 'fas fa-futbol text-danger',
-  [EVENT_TYPES.FREE_KICK]: 'fas fa-running text-primary',
-  [EVENT_TYPES.CORNER]: 'fas fa-flag text-info',
   [EVENT_TYPES.GAME_STARTED]: 'fas fa-play text-success',
   [EVENT_TYPES.HALF_TIME]: 'fas fa-pause text-secondary',
   [EVENT_TYPES.FULL_TIME]: 'fas fa-stop text-dark',
@@ -130,28 +191,22 @@ export const NOTIFICATION_TYPES = {
 };
 
 export const NOTIFICATION_CONFIG = {
-  DEFAULT_DURATION: 3000, // 3 seconds
+  get DEFAULT_DURATION() { 
+    try {
+      return config.get('ui.notifications.defaultDuration', 2000);
+    } catch (error) {
+      return 2000;
+    }
+  },
   PERSISTENT_DURATION: 0, // No auto-hide
-  MAX_NOTIFICATIONS: 5,
+  get MAX_NOTIFICATIONS() { 
+    try {
+      return config.get('ui.notifications.maxNotifications', 5);
+    } catch (error) {
+      return 5;
+    }
+  },
   ANIMATION_DURATION: 300 // 0.3 seconds
-};
-
-// Authentication Configuration
-export const AUTH_CONFIG = {
-  SESSION_TIMEOUT: 86400000, // 24 hours in milliseconds
-  TOKEN_REFRESH_INTERVAL: 3600000, // 1 hour in milliseconds
-  AUTH_REQUIRED: false,
-  USAGE_TRACKING: true,
-  ADMIN_EMAIL: 'admin@nugt.app'
-};
-
-// API Configuration
-export const API_CONFIG = {
-  REQUEST_TIMEOUT: 10000, // 10 seconds
-  MAX_RETRIES: 3,
-  RETRY_DELAY: 1000, // 1 second
-  CACHE_DURATION: 30000, // 30 seconds
-  BASE_URL: '/.netlify/functions'
 };
 
 // UI Constants
@@ -189,21 +244,11 @@ export const UI_CONFIG = {
 export const MATCH_RESULTS = {
   WIN: 'WIN',
   LOSS: 'LOSS',
-  DRAW: 'DRAW',
-  PENDING: 'PENDING',
-  CANCELLED: 'CANCELLED'
+  DRAW: 'DRAW'
 };
 
-// Player Positions
-export const PLAYER_POSITIONS = {
-  GOALKEEPER: 'GK',
-  DEFENDER: 'DEF',
-  MIDFIELDER: 'MID',
-  FORWARD: 'FWD',
-  SUBSTITUTE: 'SUB'
-};
-
-// Sharing Platforms
+// Sharing Platforms - now configurable via sharing-config.js
+// These are kept for backward compatibility
 export const SHARE_PLATFORMS = {
   WHATSAPP: 'whatsapp',
   TWITTER: 'twitter',
@@ -218,43 +263,4 @@ export const EXPORT_FORMATS = {
   CSV: 'csv',
   TXT: 'txt',
   PDF: 'pdf'
-};
-
-// Validation Rules
-export const VALIDATION = {
-  TEAM_NAME: {
-    MIN_LENGTH: 1,
-    MAX_LENGTH: 50
-  },
-  PLAYER_NAME: {
-    MIN_LENGTH: 1,
-    MAX_LENGTH: 100
-  },
-  EVENT_DESCRIPTION: {
-    MIN_LENGTH: 1,
-    MAX_LENGTH: 500
-  },
-  EMAIL: {
-    PATTERN: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  }
-};
-
-// Error Messages
-export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Network connection failed. Please check your internet connection.',
-  TIMEOUT_ERROR: 'Request timed out. Please try again.',
-  AUTH_ERROR: 'Authentication failed. Please sign in again.',
-  VALIDATION_ERROR: 'Please check your input and try again.',
-  GENERIC_ERROR: 'An unexpected error occurred. Please try again.',
-  STORAGE_ERROR: 'Failed to save data. Please try again.'
-};
-
-// Success Messages
-export const SUCCESS_MESSAGES = {
-  DATA_SAVED: 'Data saved successfully!',
-  DATA_LOADED: 'Data loaded successfully!',
-  DATA_EXPORTED: 'Data exported successfully!',
-  MATCH_SHARED: 'Match report shared successfully!',
-  PLAYER_ADDED: 'Player added successfully!',
-  SETTINGS_UPDATED: 'Settings updated successfully!'
 };

@@ -1,12 +1,11 @@
 //Cache Name
-const CACHE_NAME = "nugt-cache-v147";
+const CACHE_NAME = "nugt-cache-v325";
 //Files to cache - Modular Architecture
 const cacheFiles = [
   './',
   './index.html',
   './css/all.min.css',
   './css/custom-framework.css',
-  './css/style.css',
   './js/main.js',
   // Core modules
   './js/modules/app.js',
@@ -26,6 +25,7 @@ const cacheFiles = [
   // Match modules
   './js/modules/match/goals.js',
   './js/modules/match/combined-events.js',
+  './js/modules/match/momentum.js',
   './js/modules/match/teams.js',
   './js/modules/match/roster.js',
   // UI modules
@@ -41,7 +41,9 @@ const cacheFiles = [
   './js/modules/ui/reset-modal.js',
   './js/modules/ui/release-notes.js',
   './js/modules/ui/roster-modal.js',
-  './js/modules/ui/statistics-modal.js',
+  './js/modules/ui/statistics-tab.js',
+  './js/modules/ui/season-charts.js',
+  './js/modules/ui/league-table-modal.js',
   // Services
   './js/modules/services/notifications.js',
   './js/modules/services/sharing.js',
@@ -49,6 +51,7 @@ const cacheFiles = [
   './js/modules/services/attendance.js',
   './js/modules/services/auth.js',
   './js/modules/services/user-matches-api.js',
+  './js/modules/services/fa-fulltime.js',
   // Assets
   './webfonts/fa-regular-400.woff2',
   './webfonts/fa-solid-900.woff2',
@@ -63,18 +66,27 @@ self.addEventListener('install', function (event) {
   // Skip waiting to activate immediately
   self.skipWaiting();
 
-  // Perform install steps
+  // Perform install steps with individual file caching
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function (cache) {
         console.log('Opened cache:', CACHE_NAME);
-        return cache.addAll(cacheFiles);
+        // Cache files individually to avoid single failure breaking everything
+        return Promise.allSettled(
+          cacheFiles.map(file =>
+            cache.add(file).catch(error => {
+              console.warn(`Failed to cache ${file}:`, error);
+              return null;
+            })
+          )
+        );
       })
-      .then(() => {
-        console.log('All files cached successfully');
+      .then((results) => {
+        const successful = results.filter(r => r.status === 'fulfilled').length;
+        console.log(`Cached ${successful}/${cacheFiles.length} files successfully`);
       })
       .catch(error => {
-        console.error('Failed to cache files:', error);
+        console.error('Failed to open cache:', error);
       })
   );
 });
@@ -140,8 +152,9 @@ self.addEventListener('message', function (event) {
                     // Clear any API-related requests
                     if (request.url.includes('/api/') ||
                       request.url.includes('user-matches') ||
-                      request.url.includes('match')) {
-                      console.log('Clearing cached API request:', request.url);
+                      request.url.includes('match') ||
+                      request.url.includes('statistics') ||
+                      request.url.includes('.netlify/functions/')) {
                       return cache.delete(request);
                     }
                   })

@@ -14,6 +14,7 @@ import { showModal, hideModal } from '../ui/modals.js';
 import { getEventIcon, getEventCardClass } from '../ui/components.js';
 import { timerController } from './timer.js';
 import { attendanceManager } from '../services/attendance.js';
+import { momentumTracker } from './momentum.js';
 
 // Combined Events Manager Class
 class CombinedEventsManager {
@@ -27,6 +28,10 @@ class CombinedEventsManager {
     
     this._bindEvents();
     this.updateEventStatistics();
+    
+    // Initialize momentum tracker
+    momentumTracker.init();
+    
     this.isInitialized = true;
   }
 
@@ -37,8 +42,6 @@ class CombinedEventsManager {
     const currentSeconds = getCurrentSeconds();
     const team1Name = domCache.get('Team1NameElement')?.textContent;
     const team2Name = domCache.get('Team2NameElement')?.textContent;
-
-
 
     const eventData = {
       timestamp: formatMatchTime(currentSeconds),
@@ -71,6 +74,9 @@ class CombinedEventsManager {
     // Update displays
     this.updateMatchLog();
     this.updateEventStatistics(); // Enhanced functionality
+    
+    // Update momentum
+    momentumTracker.onEventUpdate();
 
     // Save data
     storageHelpers.saveCompleteMatchData(gameState, attendanceManager.getMatchAttendance());
@@ -121,7 +127,7 @@ class CombinedEventsManager {
   _getNotificationType(eventType) {
     const warningEvents = [
       EVENT_TYPES.INCIDENT, EVENT_TYPES.PENALTY, EVENT_TYPES.YELLOW_CARD,
-      EVENT_TYPES.RED_CARD, EVENT_TYPES.SIN_BIN, EVENT_TYPES.FOUL
+      EVENT_TYPES.RED_CARD, EVENT_TYPES.SIN_BIN, EVENT_TYPES.FOUL, EVENT_TYPES.OFFSIDE
     ];
     return warningEvents.includes(eventType) ? 'warning' : 'info';
   }
@@ -162,7 +168,11 @@ class CombinedEventsManager {
     const editTimeInput = document.getElementById('editEventTime');
     
     if (editEventIndex) editEventIndex.value = index;
-    if (editTimeInput) editTimeInput.value = currentMinutes;
+    if (editTimeInput) {
+      // Use the actual event time, not the calculated minutes
+      // This prevents the 35:00 bug when editing events after half-time
+      editTimeInput.value = currentMinutes;
+    }
 
     showModal('editEventModal');
   }
@@ -178,6 +188,7 @@ class CombinedEventsManager {
         return;
       }
 
+      // Convert minutes directly to seconds without half-time adjustment
       const newRawTime = newMinutes * 60;
       const newTimestamp = formatMatchTime(newRawTime);
 
@@ -220,6 +231,9 @@ class CombinedEventsManager {
       // Update displays
       this.updateMatchLog();
       this.updateEventStatistics();
+      
+      // Update momentum
+      momentumTracker.onEventUpdate();
 
       // Save data
       storageHelpers.saveCompleteMatchData(gameState, attendanceManager.getMatchAttendance());
@@ -580,6 +594,9 @@ function performEventDeletion() {
 
   combinedEventsManager.updateMatchLog();
   combinedEventsManager.updateEventStatistics();
+  
+  // Update momentum
+  momentumTracker.onEventUpdate();
   
   storageHelpers.saveCompleteMatchData(gameState, attendanceManager.getMatchAttendance());
   notificationManager.success(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} deleted`);

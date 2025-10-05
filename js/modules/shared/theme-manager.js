@@ -5,7 +5,7 @@
 
 class ThemeManager {
   constructor() {
-    this.currentTheme = 'blue';
+    this.currentTheme = 'red';
     this.isDarkMode = false;
     this.themeSelect = null;
     this.themePreview = null;
@@ -13,13 +13,13 @@ class ThemeManager {
 
     this.themes = {
       red: {
-        name: 'Red',
+        name: 'Red (Default)',
         primary: '#dc3545',
         primaryLight: '#e74c3c',
         primaryDark: '#c82333'
       },
       blue: {
-        name: 'Blue (Default)',
+        name: 'Blue',
         primary: '#007bff',
         primaryLight: '#0d6efd',
         primaryDark: '#0056b3'
@@ -66,7 +66,7 @@ class ThemeManager {
   /**
    * Initialize theme manager
    */
-  init() {
+  async init() {
     try {
       this.themeSelect = document.getElementById('themeSelect');
       this.themePreview = document.getElementById('themePreview');
@@ -78,7 +78,7 @@ class ThemeManager {
       }
 
       // Load saved theme and dark mode preference
-      this.loadSavedSettings();
+      await this.loadSavedSettings();
 
       // Set up event listeners
       this.setupEventListeners();
@@ -112,15 +112,30 @@ class ThemeManager {
   /**
    * Load saved theme and dark mode from localStorage
    */
-  loadSavedSettings() {
+  async loadSavedSettings() {
     try {
-      // Load color theme
+      // Load color theme - check config first, then localStorage
       const savedTheme = localStorage.getItem('app-theme');
+      let defaultTheme = 'red';
+      
+      // Try to get default theme from config
+      try {
+        const { config } = await import('./config.js');
+        // Try to get the theme regardless of loaded status, as get() will return default if not loaded
+        defaultTheme = config.get('ui.theme.defaultTheme', 'red');
+        console.log(`Theme manager using default theme from config: ${defaultTheme}`);
+      } catch (error) {
+        console.warn('Could not load theme from config, using default');
+      }
+      
       if (savedTheme && this.themes[savedTheme]) {
         this.currentTheme = savedTheme;
-        if (this.themeSelect) {
-          this.themeSelect.value = savedTheme;
-        }
+      } else {
+        this.currentTheme = defaultTheme;
+      }
+      
+      if (this.themeSelect) {
+        this.themeSelect.value = this.currentTheme;
       }
 
       // Load dark mode preference
@@ -309,6 +324,8 @@ class ThemeManager {
       themeData: this.themes[this.currentTheme]
     };
   }
+
+
 }
 
 // Create and export theme manager instance

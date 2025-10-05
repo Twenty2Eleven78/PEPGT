@@ -2,68 +2,77 @@ import { userMatchesApi } from '../services/user-matches-api.js';
 import { notificationManager } from '../services/notifications.js';
 import { matchSummaryModal } from './match-summary-modal.js';
 import { CustomModal } from '../shared/custom-modal.js';
+import { createAndAppendModal, MODAL_CONFIGS } from '../shared/modal-factory.js';
 import { authService } from '../services/auth.js';
 
-const modalHtml = `
-<div class="modal fade" id="admin-modal" tabindex="-1" aria-labelledby="admin-modal-label" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen-lg-down modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="admin-modal-label">Admin Dashboard</h5>
-                <button type="button" class="btn btn-primary btn-sm rounded-circle" data-dismiss="modal" aria-label="Close" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-times" style="font-size: 14px;"></i>
-                </button>
+const createMainAdminModal = () => {
+    const bodyContent = `
+        <!-- Controls -->
+        <div class="mb-3">
+            <div class="row g-2">
+                <div class="col-4">
+                    <select class="form-select" id="filter-select">
+                        <option value="">All Matches</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-primary w-100" id="refresh-data-btn">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-success w-100" id="upload-json-btn" title="Upload Match Data">
+                        <i class="fas fa-upload me-1"></i>Upload
+                    </button>
+                </div>
             </div>
-            
-            <div class="modal-body">
-                <!-- Admin Notification Container -->
-                <div id="admin-notification-container" style="display: none;"></div>
-                
-                <!-- Search and Controls -->
-                <div class="mb-3">
-                    <input type="text" class="form-control mb-2" id="admin-search" 
-                           placeholder="Search matches...">
-                    <div class="row g-2">
-                        <div class="col-4">
-                            <select class="form-select" id="filter-select">
-                                <option value="">All Matches</option>
-                                <option value="today">Today</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                            </select>
-                        </div>
-                        <div class="col-4">
-                            <button class="btn btn-primary w-100" id="refresh-data-btn">
-                                <i class="fas fa-sync-alt me-1"></i>Refresh
-                            </button>
-                        </div>
-                        <div class="col-4">
-                            <button class="btn btn-success w-100" id="generate-stats-btn" title="Generate Statistics">
-                                <i class="fas fa-chart-bar me-1"></i>Stats
-                            </button>
-                        </div>
-                    </div>
+            <div class="row g-2 mt-1">
+                <div class="col-6">
+                    <button class="btn btn-primary w-100" id="generate-stats-btn" title="Generate Statistics">
+                        <i class="fas fa-chart-bar me-1"></i>Generate Stats
+                    </button>
                 </div>
-
-                <!-- Statistics -->
-                <div class="row g-2 mb-3" id="admin-stats-cards">
-                    <!-- Stats will be populated here -->
-                </div>
-
-                <!-- Matches List -->
-                <div style="max-height: 400px; overflow-y: auto;">
-                    <div id="matches-list">
-                        <!-- Match cards will be populated here -->
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-primary mb-2" role="status"></div>
-                            <div class="text-muted small">Loading match data...</div>
-                        </div>
-                    </div>
+                <div class="col-6">
+                    <button class="btn btn-danger w-100" id="clear-stats-btn" title="Clear Cloud Stats">
+                        <i class="fas fa-trash me-1"></i>Clear Stats
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+
+        <!-- Statistics -->
+        <div class="row g-2 mb-3" id="admin-stats-cards">
+            <!-- Stats will be populated here -->
+        </div>
+
+        <!-- Matches List -->
+        <div style="max-height: 400px; overflow-y: auto;">
+            <div id="matches-list">
+                <!-- Match cards will be populated here -->
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary mb-2" role="status"></div>
+                    <div class="text-muted small">Loading match data...</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Create main admin modal using factory
+    createAndAppendModal(
+        'admin-modal',
+        'Admin Dashboard',
+        bodyContent,
+        {
+            ...MODAL_CONFIGS.EXTRA_LARGE,
+            size: 'modal-fullscreen-lg-down modal-xl'
+        }
+    );
+};
+
+const modalHtml = `
 
 <!-- Confirmation Modal for Deletion -->
 <div class="modal fade" id="delete-confirm-modal" tabindex="-1" aria-hidden="true">
@@ -73,8 +82,8 @@ const modalHtml = `
                 <h5 class="modal-title">
                     <i class="fas fa-trash"></i> Confirm Deletion
                 </h5>
-                <button type="button" class="btn btn-light btn-sm rounded-circle" data-dismiss="modal" aria-label="Close" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-times text-danger" style="font-size: 14px;"></i>
+                <button type="button" class="btn btn-primary btn-sm rounded-circle" data-dismiss="modal" aria-label="Close" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-times" style="font-size: 14px;"></i>
                 </button>
             </div>
             <div class="modal-body">
@@ -90,6 +99,51 @@ const modalHtml = `
                 <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
                 <button type="button" class="btn btn-danger" id="confirm-delete-btn">
                     <i class="fas fa-trash"></i> Delete Match
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload JSON Modal -->
+<div class="modal fade" id="upload-json-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload"></i> Upload Match Data
+                </h5>
+                <button type="button" class="btn btn-primary btn-sm rounded-circle" data-dismiss="modal" aria-label="Close" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-times" style="font-size: 14px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="json-file-input" class="form-label">
+                        <strong>Select JSON File:</strong>
+                    </label>
+                    <input type="file" class="form-control" id="json-file-input" accept=".json" multiple>
+                    <div class="form-text">
+                        Select one or more JSON files containing match data to upload.
+                    </div>
+                </div>
+
+                <div id="upload-preview" class="mb-3" style="display: none;">
+                    <h6>Preview:</h6>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div id="upload-preview-content"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <strong>Note:</strong> The JSON files should contain valid match data. Each file will be imported as a separate match.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelUploadBtn">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirm-upload-btn" disabled>
+                    <i class="fas fa-upload"></i> Upload Matches
                 </button>
             </div>
         </div>
@@ -147,35 +201,90 @@ const modalHtml = `
         </div>
     </div>
 </div>
+
+<!-- Confirmation Modal for Clearing Stats -->
+<div class="modal fade" id="clear-stats-confirm-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash"></i> Confirm Clear Statistics
+                </h5>
+                <button type="button" class="btn btn-primary btn-sm rounded-circle" data-dismiss="modal" aria-label="Close" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-times" style="font-size: 14px;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete all generated statistics from the cloud?</p>
+                <div class="alert alert-danger">
+                    <strong>Warning:</strong> This will remove the shared statistics file for all users. This action cannot be undone.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-clear-stats-btn">
+                    <i class="fas fa-trash"></i> Clear Statistics
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 `;
 
 let modalInstance = null;
 let deleteModalInstance = null;
 let transferModalInstance = null;
+let uploadModalInstance = null;
+let clearStatsModalInstance = null;
 let allMatches = []; // Store all matches for search functionality
 let currentDeleteMatch = null;
 let currentTransferMatch = null;
+let selectedFiles = [];
 
 const init = () => {
+    // Create main admin modal using factory
+    createMainAdminModal();
+    
+    // Add sub-modals using traditional HTML
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
     const modalElement = document.getElementById('admin-modal');
     const deleteModalElement = document.getElementById('delete-confirm-modal');
+    const uploadModalElement = document.getElementById('upload-json-modal');
     const transferModalElement = document.getElementById('transfer-match-modal');
+    const clearStatsModalElement = document.getElementById('clear-stats-confirm-modal');
 
     modalInstance = CustomModal.getOrCreateInstance(modalElement);
     deleteModalInstance = CustomModal.getOrCreateInstance(deleteModalElement);
+    uploadModalInstance = CustomModal.getOrCreateInstance(uploadModalElement);
     transferModalInstance = CustomModal.getOrCreateInstance(transferModalElement);
+    clearStatsModalInstance = CustomModal.getOrCreateInstance(clearStatsModalElement);
 
     // Initialize match summary modal
     matchSummaryModal.init();
 
-    // Add search functionality
-    const searchInput = document.getElementById('admin-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            filterMatches(e.target.value.toLowerCase());
+    // Set proper z-index for modal stacking
+    if (modalElement && deleteModalElement && uploadModalElement && transferModalElement && clearStatsModalElement) {
+        const baseZIndex = 1050; // Bootstrap's default modal z-index
+        modalElement.style.zIndex = baseZIndex;
+        
+        // Set child modals to a much higher z-index to ensure they're always on top
+        const childModalZIndex = baseZIndex + 100; // Using a larger offset
+        deleteModalElement.style.zIndex = childModalZIndex;
+        uploadModalElement.style.zIndex = childModalZIndex;
+        transferModalElement.style.zIndex = childModalZIndex;
+        clearStatsModalElement.style.zIndex = childModalZIndex;
+
+        // Also update modal classes to ensure proper stacking
+        [deleteModalElement, uploadModalElement, transferModalElement, clearStatsModalElement].forEach(element => {
+            if (element) {
+                element.classList.add('modal-child');
+                element.setAttribute('data-child-modal', 'true');
+            }
         });
     }
+
+
 
     // Add refresh button functionality
     const refreshBtn = document.getElementById('refresh-data-btn');
@@ -187,6 +296,41 @@ const init = () => {
     const generateStatsBtn = document.getElementById('generate-stats-btn');
     if (generateStatsBtn) {
         generateStatsBtn.addEventListener('click', generateStatistics);
+    }
+
+    // Add clear statistics button functionality
+    const clearStatsBtn = document.getElementById('clear-stats-btn');
+    if (clearStatsBtn) {
+        clearStatsBtn.addEventListener('click', () => {
+            if (clearStatsModalInstance) {
+                clearStatsModalInstance.show();
+            }
+        });
+    }
+
+    // Add modal show event listeners for backdrop adjustment
+    if (deleteModalElement) {
+        deleteModalElement.addEventListener('shown.bs.modal', () => adjustModalBackdrop(deleteModalElement));
+    }
+    if (uploadModalElement) {
+        uploadModalElement.addEventListener('shown.bs.modal', () => adjustModalBackdrop(uploadModalElement));
+    }
+    if (transferModalElement) {
+        transferModalElement.addEventListener('shown.bs.modal', () => adjustModalBackdrop(transferModalElement));
+    }
+    if (clearStatsModalElement) {
+        clearStatsModalElement.addEventListener('shown.bs.modal', () => adjustModalBackdrop(clearStatsModalElement));
+    }
+
+    const confirmClearStatsBtn = document.getElementById('confirm-clear-stats-btn');
+    if (confirmClearStatsBtn) {
+        confirmClearStatsBtn.addEventListener('click', handleClearStatsConfirm);
+    }
+
+    // Add upload JSON button functionality
+    const uploadJsonBtn = document.getElementById('upload-json-btn');
+    if (uploadJsonBtn) {
+        uploadJsonBtn.addEventListener('click', showUploadModal);
     }
 
     // Add filter functionality
@@ -247,6 +391,25 @@ const init = () => {
 
     if (newUserEmail) {
         newUserEmail.addEventListener('input', validateTransferForm);
+    }
+
+    // Upload modal event listeners
+    const jsonFileInput = document.getElementById('json-file-input');
+    const confirmUploadBtn = document.getElementById('confirm-upload-btn');
+    const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+
+    if (jsonFileInput) {
+        jsonFileInput.addEventListener('change', handleFileSelection);
+    }
+
+    if (confirmUploadBtn) {
+        confirmUploadBtn.addEventListener('click', handleUploadConfirm);
+    }
+
+    if (cancelUploadBtn) {
+        cancelUploadBtn.addEventListener('click', () => {
+            uploadModalInstance.hide();
+        });
     }
 
     modalElement.addEventListener('modal.show', async () => {
@@ -848,31 +1011,7 @@ const applyFilter = (filterValue) => {
     renderStats(filteredMatches, statsCardsContainer);
 };
 
-const filterMatches = (searchTerm) => {
-    if (!searchTerm.trim()) {
-        // Apply current filter if any
-        const filterSelect = document.getElementById('filter-select');
-        const currentFilter = filterSelect ? filterSelect.value : '';
-        applyFilter(currentFilter);
-        return;
-    }
 
-    const filtered = allMatches.filter(match => {
-        const email = (match.userEmail || '').toLowerCase();
-        const title = (match.title || match.matchTitle || '').toLowerCase();
-        const userId = (match.userId || '').toLowerCase();
-
-        return email.includes(searchTerm) ||
-            title.includes(searchTerm) ||
-            userId.includes(searchTerm);
-    });
-
-    renderCards(filtered);
-
-    // Update stats with filtered data
-    const statsCardsContainer = document.getElementById('admin-stats-cards');
-    renderStats(filtered, statsCardsContainer);
-};
 
 const showNoDataMessage = () => {
     const matchesList = document.getElementById('matches-list');
@@ -1128,8 +1267,83 @@ const toggleMatchApproval = async (matchData, matchIndex) => {
     }
 };
 
-const generateStatistics = async () => {
+// Function to handle modal backdrop z-index
+const adjustModalBackdrop = (modalElement) => {
+    setTimeout(() => {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        if (backdrops.length > 0) {
+            const backdrop = backdrops[backdrops.length - 1];
+            const modalZIndex = parseInt(window.getComputedStyle(modalElement).zIndex, 10);
+            if (backdrop) {
+                // For child modals, set backdrop higher than parent modal but lower than the child modal
+                if (modalElement.getAttribute('data-child-modal') === 'true') {
+                    backdrop.style.zIndex = modalZIndex - 1;
+                    backdrop.classList.add('modal-backdrop-child');
+                } else {
+                    backdrop.style.zIndex = modalZIndex - 1;
+                }
+            }
+        }
+    }, 0);
+};
+
+const handleClearStatsConfirm = async () => {
+    const confirmBtn = document.getElementById('confirm-clear-stats-btn');
+    const originalText = confirmBtn.innerHTML;
+
     try {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
+
+        // Call the API to delete the statistics from the cloud
+        await userMatchesApi.deleteStatistics();
+
+        // Clear the local cache
+        localStorage.removeItem('generatedStatistics');
+
+        // Hide the confirmation modal
+        clearStatsModalInstance.hide();
+
+        notificationManager.success('Cloud statistics have been cleared successfully.');
+
+        // Optionally, refresh the statistics tab if it's visible
+        const statsTab = document.querySelector('#statstab.active');
+        if (statsTab) {
+            import('./statistics-tab.js').then(({ statisticsTab }) => {
+                if (statisticsTab && statisticsTab.show) {
+                    statisticsTab.show();
+                }
+            });
+        }
+
+    } catch (error) {
+        notificationManager.error(`Failed to clear statistics: ${error.message}`);
+    } finally {
+        if(confirmBtn){
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = originalText;
+        }
+    }
+};
+
+let isGeneratingStats = false;
+
+const generateStatistics = async () => {
+    if (isGeneratingStats) {
+        notificationManager.warning('Statistics generation already in progress');
+        return;
+    }
+    
+    const generateBtn = document.getElementById('generate-stats-btn');
+    const originalText = generateBtn?.innerHTML;
+    
+    try {
+        isGeneratingStats = true;
+        if (generateBtn) {
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+        }
+        
         // Get all approved matches
         const approvedMatches = allMatches.filter(match => match.approvedForStats === true);
         
@@ -1149,6 +1363,12 @@ const generateStatistics = async () => {
     } catch (error) {
         console.error('Error generating statistics:', error);
         notificationManager.error('Failed to generate statistics');
+    } finally {
+        isGeneratingStats = false;
+        if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalText || '<i class="fas fa-chart-bar me-1"></i>Generate Statistics';
+        }
     }
 };
 
@@ -1168,6 +1388,8 @@ const calculateStatisticsFromMatches = async (matches) => {
             goals: 0,
             assists: 0,
             appearances: 0,
+            starts: 0,
+            substitute: 0,
             matchesWithGoals: new Set(),
             matchesWithAssists: new Set(),
             matchesPlayed: new Set(),
@@ -1180,11 +1402,72 @@ const calculateStatisticsFromMatches = async (matches) => {
 
     // Process each approved match
     matches.forEach((match, matchIndex) => {
-        // Process attendance
+        // Process lineup data
+        if (match.matchLineup) {
+            // Process starting XI
+            if (match.matchLineup.startingXI && Array.isArray(match.matchLineup.startingXI)) {
+                match.matchLineup.startingXI.forEach(playerName => {
+                    if (playerName && playerName.trim()) {
+                        const playerKey = playerName.toLowerCase().trim();
+                        
+                        if (playerStatsMap.has(playerKey)) {
+                            const player = playerStatsMap.get(playerKey);
+                            player.starts++;
+                            player.matchesPlayed.add(matchIndex);
+                        } else {
+                            playerStatsMap.set(playerKey, {
+                                name: playerName.trim(),
+                                shirtNumber: null,
+                                goals: 0,
+                                assists: 0,
+                                appearances: 0,
+                                starts: 1,
+                                substitute: 0,
+                                matchesWithGoals: new Set(),
+                                matchesWithAssists: new Set(),
+                                matchesPlayed: new Set([matchIndex]),
+                                isRosterPlayer: false
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // Process substitutes
+            if (match.matchLineup.substitutes && Array.isArray(match.matchLineup.substitutes)) {
+                match.matchLineup.substitutes.forEach(playerName => {
+                    if (playerName && playerName.trim()) {
+                        const playerKey = playerName.toLowerCase().trim();
+                        
+                        if (playerStatsMap.has(playerKey)) {
+                            const player = playerStatsMap.get(playerKey);
+                            player.substitute++;
+                            player.matchesPlayed.add(matchIndex);
+                        } else {
+                            playerStatsMap.set(playerKey, {
+                                name: playerName.trim(),
+                                shirtNumber: null,
+                                goals: 0,
+                                assists: 0,
+                                appearances: 0,
+                                starts: 0,
+                                substitute: 1,
+                                matchesWithGoals: new Set(),
+                                matchesWithAssists: new Set(),
+                                matchesPlayed: new Set([matchIndex]),
+                                isRosterPlayer: false
+                            });
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Process attendance - only count for players already in lineup (team 1 players)
         if (match.attendance && Array.isArray(match.attendance)) {
             match.attendance.forEach(attendee => {
                 let name, isPresent;
-                
+
                 if (typeof attendee === 'string' && attendee.trim()) {
                     name = attendee.trim();
                     isPresent = true;
@@ -1196,22 +1479,12 @@ const calculateStatisticsFromMatches = async (matches) => {
 
                 if (name && isPresent) {
                     const playerKey = name.toLowerCase().trim();
-                    
+
+                    // Only count attendance for players who are already in the lineup (team 1 players)
                     if (playerStatsMap.has(playerKey)) {
                         playerStatsMap.get(playerKey).matchesPlayed.add(matchIndex);
-                    } else {
-                        playerStatsMap.set(playerKey, {
-                            name: name.trim(),
-                            shirtNumber: null,
-                            goals: 0,
-                            assists: 0,
-                            appearances: 0,
-                            matchesWithGoals: new Set(),
-                            matchesWithAssists: new Set(),
-                            matchesPlayed: new Set([matchIndex]),
-                            isRosterPlayer: false
-                        });
                     }
+                    // Note: Do not create new player entries for attendees not in lineup
                 }
             });
         }
@@ -1227,57 +1500,49 @@ const calculateStatisticsFromMatches = async (matches) => {
         }
 
         goals.forEach(goal => {
-            totalGoalsFound++;
-            
+            // Skip disallowed goals entirely
+            if (goal.disallowed === true || goal.isDisallowed === true) {
+                return;
+            }
+
             // Process scorer - use the correct property names from the actual data
             const scorer = goal.goalScorerName || goal.scorer || goal.player || goal.goalScorer;
-            if (scorer && scorer.trim() && scorer !== 'Opposition') {
+            if (scorer && scorer.trim() && scorer !== 'Opposition' && scorer.trim().toLowerCase() !== 'n/a') {
                 const playerKey = scorer.toLowerCase().trim();
-                
+
+                // Only count goals for players who are already in the lineup (team 1 players)
                 if (playerStatsMap.has(playerKey)) {
+                    totalGoalsFound++; // Only increment for team 1 goals
                     const player = playerStatsMap.get(playerKey);
                     player.goals++;
                     player.matchesWithGoals.add(matchIndex);
                     player.matchesPlayed.add(matchIndex);
-                } else {
-                    playerStatsMap.set(playerKey, {
-                        name: scorer.trim(),
-                        shirtNumber: goal.goalScorerShirtNumber || null,
-                        goals: 1,
-                        assists: 0,
-                        appearances: 0,
-                        matchesWithGoals: new Set([matchIndex]),
-                        matchesWithAssists: new Set(),
-                        matchesPlayed: new Set([matchIndex]),
-                        isRosterPlayer: false
-                    });
+                    // Update shirt number from match data if available
+                    if (goal.goalScorerShirtNumber && !player.shirtNumber) {
+                        player.shirtNumber = goal.goalScorerShirtNumber;
+                    }
                 }
+                // Note: Opposition goals are not counted in team totals or player stats
             }
 
             // Process assists - use the correct property names from the actual data
             const assistName = goal.goalAssistName || goal.assists || goal.assist || goal.assistedBy;
-            if (assistName && assistName.trim() && assistName !== 'Opposition') {
-                totalAssistsFound++;
+            if (assistName && assistName.trim() && assistName !== 'Opposition' && assistName.trim().toLowerCase() !== 'n/a') {
                 const playerKey = assistName.toLowerCase().trim();
-                
+
+                // Only count assists for players who are already in the lineup (team 1 players)
                 if (playerStatsMap.has(playerKey)) {
+                    totalAssistsFound++; // Only increment for team 1 assists
                     const player = playerStatsMap.get(playerKey);
                     player.assists++;
                     player.matchesWithAssists.add(matchIndex);
                     player.matchesPlayed.add(matchIndex);
-                } else {
-                    playerStatsMap.set(playerKey, {
-                        name: assistName.trim(),
-                        shirtNumber: goal.goalAssistShirtNumber || null,
-                        goals: 0,
-                        assists: 1,
-                        appearances: 0,
-                        matchesWithGoals: new Set(),
-                        matchesWithAssists: new Set([matchIndex]),
-                        matchesPlayed: new Set([matchIndex]),
-                        isRosterPlayer: false
-                    });
+                    // Update shirt number from match data if available
+                    if (goal.goalAssistShirtNumber && !player.shirtNumber) {
+                        player.shirtNumber = goal.goalAssistShirtNumber;
+                    }
                 }
+                // Note: Opposition assists are not counted in team totals
             }
         });
     });
@@ -1311,32 +1576,55 @@ const calculateStatisticsFromMatches = async (matches) => {
     // Calculate team statistics
     let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
     let totalAttendance = 0;
-    
+
     matches.forEach(match => {
-        // Count goals for and against
+        // Count goals for and against - goals by team 1 players are goalsFor, others are goalsAgainst
+        // Exclude disallowed goals
         if (match.goals && Array.isArray(match.goals)) {
             match.goals.forEach(goal => {
-                if (goal.goalScorerName && goal.goalScorerName !== 'Opposition') {
-                    goalsFor++;
-                } else if (goal.goalScorerName === 'Opposition') {
-                    goalsAgainst++;
+                // Skip disallowed goals
+                if (goal.disallowed === true || goal.isDisallowed === true) {
+                    return;
+                }
+                const scorer = goal.goalScorerName || goal.scorer || goal.player || goal.goalScorer;
+                if (scorer && scorer.trim() && scorer.trim().toLowerCase() !== 'n/a') {
+                    const playerKey = scorer.toLowerCase().trim();
+                    if (playerStatsMap.has(playerKey)) {
+                        goalsFor++;
+                    } else {
+                        goalsAgainst++;
+                    }
                 }
             });
         }
-        
+
         // Count attendance
         if (match.attendance && Array.isArray(match.attendance)) {
             const attendedCount = match.attendance.filter(attendee => {
                 if (typeof attendee === 'string') return true;
-                return attendee && (attendee.attendance === true || attendee.present === true || attendee.attended === true);
+                return attendee && (attendee.attendance === true || attendee.present === true || attendee.attended === true || attendee.attending === true);
             }).length;
             totalAttendance += attendedCount;
         }
-        
-        // Determine match result (simplified - you might want to enhance this)
-        const matchGoalsFor = match.goals ? match.goals.filter(g => g.goalScorerName !== 'Opposition').length : 0;
-        const matchGoalsAgainst = match.goals ? match.goals.filter(g => g.goalScorerName === 'Opposition').length : 0;
-        
+
+        // Determine match result based on goals for vs against (excluding disallowed goals)
+        const matchGoalsFor = match.goals ? match.goals.filter(g => {
+            // Skip disallowed goals
+            if (g.disallowed === true || g.isDisallowed === true) return false;
+            const scorer = g.goalScorerName || g.scorer || g.player || g.goalScorer;
+            if (!scorer || !scorer.trim() || scorer.trim().toLowerCase() === 'n/a') return false;
+            const playerKey = scorer.toLowerCase().trim();
+            return playerStatsMap.has(playerKey);
+        }).length : 0;
+        const matchGoalsAgainst = match.goals ? match.goals.filter(g => {
+            // Skip disallowed goals
+            if (g.disallowed === true || g.isDisallowed === true) return false;
+            const scorer = g.goalScorerName || g.scorer || g.player || g.goalScorer;
+            if (!scorer || !scorer.trim() || scorer.trim().toLowerCase() === 'n/a') return false;
+            const playerKey = scorer.toLowerCase().trim();
+            return !playerStatsMap.has(playerKey);
+        }).length : 0;
+
         if (matchGoalsFor > matchGoalsAgainst) {
             wins++;
         } else if (matchGoalsFor === matchGoalsAgainst) {
@@ -1355,10 +1643,31 @@ const calculateStatisticsFromMatches = async (matches) => {
 
     // Generate per-match statistics
     const matchStats = matches.map((match, index) => {
-        const matchGoalsFor = match.goals ? match.goals.filter(g => g.goalScorerName && g.goalScorerName !== 'Opposition').length : 0;
-        const matchGoalsAgainst = match.goals ? match.goals.filter(g => g.goalScorerName === 'Opposition').length : 0;
-        const matchAssists = match.goals ? match.goals.filter(g => g.goalAssistName && g.goalAssistName !== 'Opposition').length : 0;
-        
+        const matchGoalsFor = match.goals ? match.goals.filter(g => {
+            // Skip disallowed goals
+            if (g.disallowed === true || g.isDisallowed === true) return false;
+            const scorer = g.goalScorerName || g.scorer || g.player || g.goalScorer;
+            if (!scorer || !scorer.trim() || scorer.trim().toLowerCase() === 'n/a') return false;
+            const playerKey = scorer.toLowerCase().trim();
+            return playerStatsMap.has(playerKey);
+        }).length : 0;
+        const matchGoalsAgainst = match.goals ? match.goals.filter(g => {
+            // Skip disallowed goals
+            if (g.disallowed === true || g.isDisallowed === true) return false;
+            const scorer = g.goalScorerName || g.scorer || g.player || g.goalScorer;
+            if (!scorer || !scorer.trim() || scorer.trim().toLowerCase() === 'n/a') return false;
+            const playerKey = scorer.toLowerCase().trim();
+            return !playerStatsMap.has(playerKey);
+        }).length : 0;
+        const matchAssists = match.goals ? match.goals.filter(g => {
+            // Skip disallowed goals for assists
+            if (g.disallowed === true || g.isDisallowed === true) return false;
+            const assistName = g.goalAssistName || g.assists || g.assist || g.assistedBy;
+            if (!assistName || !assistName.trim() || assistName.trim().toLowerCase() === 'n/a') return false;
+            const playerKey = assistName.toLowerCase().trim();
+            return playerStatsMap.has(playerKey);
+        }).length : 0;
+
         // Count attendance for this match
         let matchAttendance = 0;
         if (match.attendance && Array.isArray(match.attendance)) {
@@ -1367,15 +1676,22 @@ const calculateStatisticsFromMatches = async (matches) => {
                 return attendee && (attendee.attendance === true || attendee.present === true || attendee.attended === true || attendee.attending === true);
             }).length;
         }
-        
-        // Find top scorer for this match
-        const matchGoals = match.goals ? match.goals.filter(g => g.goalScorerName && g.goalScorerName !== 'Opposition') : [];
+
+        // Find top scorer for this match (only team 1 players, excluding disallowed goals)
+        const matchGoals = match.goals ? match.goals.filter(g => {
+            // Skip disallowed goals
+            if (g.disallowed === true || g.isDisallowed === true) return false;
+            const scorer = g.goalScorerName || g.scorer || g.player || g.goalScorer;
+            if (!scorer || !scorer.trim() || scorer.trim().toLowerCase() === 'n/a') return false;
+            const playerKey = scorer.toLowerCase().trim();
+            return playerStatsMap.has(playerKey);
+        }) : [];
         const scorerCounts = {};
         matchGoals.forEach(goal => {
-            const scorer = goal.goalScorerName;
+            const scorer = goal.goalScorerName || goal.scorer || g.player || g.goalScorer;
             scorerCounts[scorer] = (scorerCounts[scorer] || 0) + 1;
         });
-        
+
         let topScorer = 'None';
         let maxGoals = 0;
         Object.entries(scorerCounts).forEach(([scorer, goals]) => {
@@ -1384,10 +1700,10 @@ const calculateStatisticsFromMatches = async (matches) => {
                 topScorer = `${scorer} (${goals})`;
             }
         });
-        
-        const opposition = match.team2name || match.opposition || match.opponent || 'Unknown';
+
+        const opposition = match.team2Name || match.opposition || match.opponent || 'Unknown';
         console.log(`Match ${index}: team2name="${match.team2name}", opposition="${match.opposition}", opponent="${match.opponent}", final="${opposition}"`);
-        
+
         return {
             date: match.date || match.matchDate || match.savedAt,
             opposition: opposition,
@@ -1426,11 +1742,162 @@ const calculateStatisticsFromMatches = async (matches) => {
 };
 
 const saveGeneratedStatistics = async (statistics) => {
-    // Save to localStorage for now, could be extended to save to cloud
-    localStorage.setItem('generatedStatistics', JSON.stringify(statistics));
+    console.log('📊 Admin: Saving generated statistics:', statistics);
     
-    // Could also save to cloud storage here
-    // await userMatchesApi.saveStatistics(statistics);
+    // Save to localStorage as fallback
+    //localStorage.setItem('generatedStatistics', JSON.stringify(statistics));
+    //console.log('💾 Admin: Saved to localStorage');
+    
+    // Save to cloud storage for sharing across users
+    try {
+        // Clear cache to ensure fresh data
+        userMatchesApi.clearCache();
+        
+        // Save statistics - API will handle duplicate prevention
+        await userMatchesApi.saveStatistics(statistics);
+        console.log('☁️ Admin: Saved to cloud successfully');
+    } catch (error) {
+        console.warn('❌ Admin: Failed to save statistics to cloud:', error);
+    }
+};
+
+const showUploadModal = () => {
+    // Reset form
+    const jsonFileInput = document.getElementById('json-file-input');
+    const uploadPreview = document.getElementById('upload-preview');
+    const confirmUploadBtn = document.getElementById('confirm-upload-btn');
+
+    if (jsonFileInput) jsonFileInput.value = '';
+    if (uploadPreview) uploadPreview.style.display = 'none';
+    if (confirmUploadBtn) confirmUploadBtn.disabled = true;
+
+    selectedFiles = [];
+    uploadModalInstance.show();
+};
+
+const handleFileSelection = async (event) => {
+    const files = Array.from(event.target.files);
+    const uploadPreview = document.getElementById('upload-preview');
+    const uploadPreviewContent = document.getElementById('upload-preview-content');
+    const confirmUploadBtn = document.getElementById('confirm-upload-btn');
+
+    selectedFiles = [];
+
+    if (files.length === 0) {
+        uploadPreview.style.display = 'none';
+        confirmUploadBtn.disabled = true;
+        return;
+    }
+
+    let validFiles = 0;
+    let previewHtml = '';
+
+    for (const file of files) {
+        try {
+            const text = await file.text();
+            const jsonData = JSON.parse(text);
+
+            // Basic validation
+            if (typeof jsonData === 'object' && jsonData !== null) {
+                selectedFiles.push({ file, data: jsonData });
+                validFiles++;
+
+                const matchTitle = jsonData.title || jsonData.matchTitle || file.name;
+                const userEmail = jsonData.userEmail || 'Not specified';
+                const savedAt = jsonData.savedAt ? new Date(jsonData.savedAt).toLocaleString() : 'Not specified';
+
+                previewHtml += `
+                    <div class="border-bottom pb-2 mb-2">
+                        <strong>File:</strong> ${escapeHtml(file.name)}<br>
+                        <strong>Match:</strong> ${escapeHtml(matchTitle)}<br>
+                        <strong>User:</strong> ${escapeHtml(userEmail)}<br>
+                        <strong>Date:</strong> ${savedAt}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            previewHtml += `
+                <div class="border-bottom pb-2 mb-2 text-danger">
+                    <strong>File:</strong> ${escapeHtml(file.name)}<br>
+                    <strong>Error:</strong> Invalid JSON format
+                </div>
+            `;
+        }
+    }
+
+    if (uploadPreviewContent) {
+        uploadPreviewContent.innerHTML = previewHtml;
+    }
+
+    uploadPreview.style.display = 'block';
+    confirmUploadBtn.disabled = validFiles === 0;
+
+    if (validFiles > 0) {
+        notificationManager.info(`${validFiles} valid JSON file(s) selected for upload`);
+    } else {
+        notificationManager.error('No valid JSON files found');
+    }
+};
+
+const handleUploadConfirm = async () => {
+    if (selectedFiles.length === 0) return;
+
+    const confirmBtn = document.getElementById('confirm-upload-btn');
+    const originalText = confirmBtn.innerHTML;
+
+    try {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+
+        const currentUser = await authService.getCurrentUser();
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const { file, data } of selectedFiles) {
+            try {
+                // Prepare match data - assign to current admin user
+                const matchData = {
+                    ...data,
+                    uploadedAt: Date.now(),
+                    uploadedBy: currentUser?.email || 'admin',
+                    originalFileName: file.name,
+                    userEmail: currentUser?.email || 'admin@nugt.app',
+                    userId: currentUser?.id || 'admin_user'
+                };
+
+                // Remove any admin-specific properties
+                delete matchData.blobKey;
+                delete matchData.matchIndex;
+                delete matchData.id;
+
+                // Save the match data
+                await userMatchesApi.saveMatchData(matchData);
+                successCount++;
+
+            } catch (error) {
+                console.error(`Failed to upload ${file.name}:`, error);
+                errorCount++;
+            }
+        }
+
+        // Refresh the data
+        await loadMatchesData();
+
+        uploadModalInstance.hide();
+
+        if (successCount > 0) {
+            notificationManager.success(`Successfully uploaded ${successCount} match(es)`);
+        }
+        if (errorCount > 0) {
+            notificationManager.error(`Failed to upload ${errorCount} match(es)`);
+        }
+
+    } catch (error) {
+        notificationManager.error(`Upload failed: ${error.message}`);
+    } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
+    }
 };
 
 const refreshData = async () => {
